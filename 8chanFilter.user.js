@@ -22,8 +22,8 @@
   Contributers:
   https://github.com/nokosage/8chan-Filter/graphs/contributors
 
-  This script contains code from 4chan Filter (aeosynth) (https://github.com/milkytiptoe/Name-Sync)
-  @license: https://raw.github.com/milkytiptoe/Name-Sync/master/license
+  This script contains code from 4chan Filter (aeosynth) (http://userscripts-mirror.org/scripts/show/109922.html)
+  @license: GPL version 3 or any later version; http://www.gnu.org/copyleft/gpl.html 
 */
 (function(){
   var d, on, off, main, ready;
