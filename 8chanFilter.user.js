@@ -1,29 +1,21 @@
 // ==UserScript==
-// @name           4chan filter
-// @namespace      http://userscripts.org/users/64431
-// @description    Regular expression, point-and-click filtering
-// @include        http://boards.4chan.org/*
-// @include        http://dis.4chan.org/*
-// @include        http://archive.easymodo.net/cgi-board.pl/*
-// @include        http://4chanarchive.org/brchive/*
-// @include        http://suptg.thisisnotatrueending.com/archive/*
-// @version        6.4.0-mod-4chanX-2.2.1
-// @delay          100
-// @copyright      2009, 2010, James Campos
-// @license        GPL version 3 or any later version; http://www.gnu.org/copyleft/gpl.html
-// @supported      Firefox 3.5+, Opera 10.50+, Chrome 4+
+// @name         8chan Filter
+// @version      0.1.0
+// @namespace    nokosage
+// @description  Regular expression, point-and-click filtering on 8chan.
+// @author       nokosage
+// @include      *://*8chan.co/*/*.html*
+// @run-at       document-start
+// @grant        none
+// @updateURL    
+// @downloadURL  
+// @icon         
 // ==/UserScript==
-     
-    //TODO
-    // fychan
-    // dimensions entering should have an immediate effect
-    // standardized movement
-    // object for filter lists
-    // pnc filtering doesn't work on easymodo
-    // new switches: -t temp, -F replies WITH files, -o -O op/not op (or reverse?)
-     
-(function() {// <- Opera wrapper
-     
+
+(function(){
+  var d, on, off, main, ready;
+
+  main = function() {
     //x-browser
     if (typeof GM_deleteValue == 'undefined') {
       GM_addStyle = function(css) {
@@ -94,9 +86,9 @@
         a.push(item);
       return a;
     }
-     
+  
     //main
-    if (!$('blockquote')) return;
+    //if (!$('blockquote')) return;
      
     if (!String.trim)//lol opera
       String.prototype.trim = function() {
@@ -180,7 +172,7 @@
     // replies are children of the OP, and we don't want to filter
     // the entire thread just because of one reply.
     const filex = site == 'easymodo' ? "./span" : "./span[@class='filesize']";
-    const imagex = site == 'easymodo' ? ".//img[@class='thumb']" : ".//img[@md5]|//span[@class='tn_reply' or @class='tn_thread']";
+    const imagex = site == 'easymodo' ? ".//img[@class='post-image']" : ".//img[@class='post-image']|//span[@class='tn_reply' or @class='tn_thread']";
     switch (site) {
       case 'thisisnotatrueending':
         var board = '\/tg\/';
@@ -193,7 +185,8 @@
     }
     const manual = GM_getValue('Manual Filtering', true);
     const stubs = GM_getValue('Show Stubs');
-    var replies = X('.//blockquote/parent::td');
+    var replies = X('//div[@class="post reply"]');
+    //console.log(replies);
     var imageCount = X(imagex).length;
     var threads = X("./form/div/div[@id!='footer'][not(contains(@id,'hidden'))]"); //MOD
     var posts = $$('.post');//Text Boards
@@ -207,7 +200,7 @@
       replyHidden.shift();
     GM_setValue(board + 'manual', JSON.stringify(replyHidden));
      
-    var postCount = (posts.length || threads.length) ? posts.length + threads.length + replies.length : $$('blockquote').length;
+    var postCount = (posts.length || threads.length) ? replies.length : $$('blockquote').length;
      
     $('div:first-child', dialog).addEventListener('mousedown', startMove, true);
     $('div:first-child > span:first-child', dialog).textContent = 'Images: ' + imageCount + ' Posts: ' + postCount;
@@ -282,7 +275,11 @@
      
     if (manual)
       addReplyHiding(document.body);
-    document.body.addEventListener('DOMNodeInserted', function(e){if(e.target.nodeName=='TABLE') getPosts($('.reply', e.target))}, true);
+    //document.body.addEventListener('DOMNodeInserted', function(e){if(e.target.nodeName=='TABLE') getPosts($('.reply', e.target))}, true);
+      window.$(document).on('new_post', function(e, post) {
+        getPosts();
+        applyF();
+      });
     autoHideF();
     document.body.appendChild(dialog);
     applyF();
@@ -346,14 +343,14 @@
       if (el) {
         if (manual)
           addReplyHiding(el);
-        var tempImage = x(".//img[@md5]|.//span[@class='tn_reply']", el);
+        var tempImage = x(".//img[@class='post-image']|.//span[@class='tn_reply']", el);
         if (tempImage)
           imageCount++;
         if (hideText.checked && !tempImage) {
-          el.parentNode.style.display = 'none';
+          el.style.display = 'none';
           hideCount++;
         } else if (spam(el)) {
-          el.parentNode.style.display = 'none';
+          el.style.display = 'none';
           hideCount++;
         }
         replies.push(el);
@@ -361,7 +358,7 @@
         hideSpan.textContent = 'Hidden Posts: ' + hideCount;
       } else {
         imageCount = X(imagex).length;
-        replies = X('.//blockquote/parent::td');
+        replies = X('//div[@class="post reply"]');
         hideCountF();
       }
       var postCount = reply ? replies.length + 1 : threads.length ? threads.length + replies.length : $$('blockquote').length;
@@ -528,8 +525,8 @@
       } else {
         for (var i in replies)
           if (spam(replies[i]))
-            replies[i].parentNode.style.display = 'none';
-      }
+            replies[i].style.display = 'none';
+      }/*
       posts.forEach(function (post) {
         if (spam(post)) {
           if ($('.postnum', post).textContent == 1 && !reply)//OP
@@ -537,7 +534,7 @@
           else
             post.style.display = 'none';
         }
-      });
+      });*/
       if (subjects) {//this is kind of ugly
         disSubjects.forEach(function (sub) {
           for (j in subjects)
@@ -555,8 +552,8 @@
         if (temp == replyHidden[i].id)
           return true;
       }
-      var bq = $('blockquote', el);
-      if(!bq) return false; //MOD
+      var bq = $('.body', el);
+      if (!bq) return false; //MOD
       bqTC = bq.textContent;
       bqIH = bq.innerHTML;
       for (var i in comments)
@@ -599,6 +596,7 @@
             if (subjects[j].test(temp.textContent))
               return true;
       }
+      return false;
     }
      
     //GUI
@@ -747,23 +745,49 @@
     }
      
     function hideCountF() {
-      hideCount = 0;
+      hideCount = 0;/*
       for (var i = 0; i < threads.length; i++)
         if (threads[i].style.display)
-          hideCount++;
+          hideCount++;*/
       if (manual && stubs) {
         for (var i in replies)
           if ($('blockquote', replies[i]).style.display)
             hideCount++;
       } else
         for (var i in replies)
-          if (replies[i].parentNode.style.display)
-            hideCount++;
+          if (replies[i].style.display)
+            hideCount++;/*
       for (var i = 0; i < posts.length; i++)
         if (posts[i].style.display)
           hideCount++;
-     
+     */
       $('span:last-child', dialog).textContent = 'Hidden Posts: ' + hideCount;
+    } 
+  };
+
+  d = document;
+  
+  on = function (el, type, handler) {
+    return el.addEventListener(type, handler, false);
+  };
+  
+  off = function (el, type, handler) {
+    return el.removeEventListener(type, handler, false);
+  };
+  
+  ready = function(fc) {
+    var cb;
+    if (d.readyState !== 'loading') {
+      fc();
+      return ;
     }
-     
-    }) ();
+    cb = function () {
+      off(d, 'DOMContentLoaded', cb);
+      return fc();
+    };
+    return on(d, 'DOMContentLoaded', cb);
+  };
+
+  ready(main);
+  
+}).call(this);
