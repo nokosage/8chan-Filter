@@ -12,6 +12,19 @@
 // @icon         
 // ==/UserScript==
 
+/*
+  8chan Filter v0.1.0
+  https://github.com/nokosage/8chan-Filter/
+
+  Developers:
+  nokosage
+
+  Contributers:
+  https://github.com/nokosage/8chan-Filter/graphs/contributors
+
+  This script contains code from 4chan Filter (aeosynth) (https://github.com/milkytiptoe/Name-Sync)
+  @license: https://raw.github.com/milkytiptoe/Name-Sync/master/license
+*/
 (function(){
   var d, on, off, main, ready;
 
