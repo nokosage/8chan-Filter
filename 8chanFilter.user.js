@@ -1,19 +1,19 @@
 // ==UserScript==
 // @name         8chan Filter
-// @version      0.1.0
+// @version      0.1.1
 // @namespace    nokosage
 // @description  Regular expression, point-and-click filtering on 8chan.
 // @author       nokosage
 // @include      *://*8chan.co/*/*.html*
 // @run-at       document-start
 // @grant        none
-// @updateURL    
-// @downloadURL  
+// @updateURL    https://raw.githubusercontent.com/nokosage/8chan-Filter/master/8chanFilter.meta.js
+// @downloadURL  https://raw.githubusercontent.com/nokosage/8chan-Filter/master/8chanFilter.user.js
 // @icon         
 // ==/UserScript==
 
 /*
-  8chan Filter v0.1.0
+  8chan Filter v0.1.1
   https://github.com/nokosage/8chan-Filter/
 
   Developers:
@@ -25,6 +25,7 @@
   This script contains code from 4chan Filter (aeosynth) (http://userscripts-mirror.org/scripts/show/109922.html)
   @license: GPL version 3 or any later version; http://www.gnu.org/copyleft/gpl.html 
 */
+
 (function(){
   var d, on, off, main, ready;
 
@@ -184,7 +185,7 @@
     //we can't just use the dis xpath because on the imageboards,
     // replies are children of the OP, and we don't want to filter
     // the entire thread just because of one reply.
-    const filex = site == 'easymodo' ? "./span" : "./span[@class='filesize']";
+    const filex = site == 'easymodo' ? "./span" : "./div[@class='files']";
     const imagex = site == 'easymodo' ? ".//img[@class='post-image']" : ".//img[@class='post-image']|//span[@class='tn_reply' or @class='tn_thread']";
     switch (site) {
       case 'thisisnotatrueending':
