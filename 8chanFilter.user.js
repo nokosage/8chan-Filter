@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         8chan Filter
-// @version      0.1.1
+// @version      0.2.0
 // @namespace    nokosage
 // @description  Regular expression, point-and-click filtering on 8chan.
 // @author       nokosage
@@ -13,7 +13,7 @@
 // ==/UserScript==
 
 /*
-  8chan Filter v0.1.1
+  8chan Filter v0.2.0
   https://github.com/nokosage/8chan-Filter/
 
   Developers:
@@ -102,7 +102,7 @@
     }
   
     //main
-    //if (!$('blockquote')) return;
+    if (!$('[name="board"]')) return;
      
     if (!String.trim)//lol opera
       String.prototype.trim = function() {
@@ -179,9 +179,9 @@
     try{const site = window.location.hostname.match(/\.(\w+)/)[1]} catch(e){};// using try/catch because my saved test pages don't have url formatted filneames
     const server = location.hostname.match(/(\w+)?/)[0];
     const tripx =
-      site == 'easymodo' ? ".//span[@class='postertrip']" :
-      server == 'dis' ? './/span[@class="postertrip"]' :
-      "./span[@class='postertrip']|./a/span[@class='postertrip']";
+      site == 'easymodo' ? ".//span[@class='trip']" :
+      server == 'dis' ? './/span[@class="trip"]' :
+      "./span[@class='trip']|./a/span[@class='trip']";
     //we can't just use the dis xpath because on the imageboards,
     // replies are children of the OP, and we don't want to filter
     // the entire thread just because of one reply.
@@ -315,13 +315,25 @@
      
     function hideReply(toggle, bq, click) {
       if (stubs) {
+        var stb, txt;
         bq.style.display = 'none';
-        toggle.textContent = 'Show';
-        var prev = bq.previousSibling;
-        if (prev.href)//image
-          prev.style.display = 'none';
-      } else
-        toggle.parentNode.parentNode.style.display = 'none';
+        bq.nextSibling.style.display = 'none';
+        if (!$('.filter_stub', bq.previousSibling)) {
+          stb = document.createElement("div");
+          lbl = $('label', $('.intro', bq));
+          no = $('[class="post_no"]', $('.intro', bq));
+          stb.innerHTML = '<a class="filter_stub" style="text-decoration: none; margin-left: 4px; cursor: pointer;">'+
+                           ' [ - ] - ' + lbl.textContent + ' ' + no.textContent + no.nextSibling.textContent+
+                          '</a>';
+          $('[class="post_anchor"]').parentNode.insertBefore(stb, bq);
+          //stb.addEventListener('click', showReply($('.delete', stb.nextSibling), stb.nextSibling, false), false);
+        }
+      } else {
+        //toggle.parentNode.parentNode.style.display = 'none';
+        //toggle.parentNode.parentNode.nextSibling.style.display = 'none';
+        //bq.style.display = 'none';
+        //bq.previousSibling.style.display = 'none';
+      }
       if (click) {
         replyHidden.push({
           id: bq.parentNode.id,
@@ -333,8 +345,17 @@
      
     function showReply(toggle, bq, click) {
       bq.style.display = '';
-      toggle.textContent = 'Hide';
-      bq.previousSibling.style.display = '';
+      bq.nextSibling.style.display = '';
+      //toggle.textContent = 'Hide';
+      //bq.previousSibling.style.display = '';
+      /* if ($('.filter_stub', bq.previousSibling)) {
+          $('[class="post_anchor"]').removeChild(bq.previousSibling);
+        }*/
+        if ($('.filter_stub', bq.previousSibling)) {
+          var _ref = $('.filter_stub', bq.previousSibling);
+          var node = _ref.parentNode;
+          node.parentNode.removeChild(node);
+        }
       if (click) {
         var id = bq.parentNode.id;
         for (var i in replyHidden) {
@@ -346,7 +367,7 @@
     }
      
     function handleReply() {
-      var bq = x("following::blockquote", this);
+      var bq = this;//x(".body", this);
       if (this.textContent == 'Show')
         showReply(this, bq, true);
       else
@@ -390,10 +411,12 @@
         }
       if (manual && stubs)
         for (var i in replies)
-          showReply($('.pointer', replies[i]), $('blockquote', replies[i]));
+          showReply($('.delete', replies[i]), replies[i]);
       else
-        for (var i in replies)
+        for (var i in replies) {
           replies[i].parentNode.style.display = '';
+          replies[i].previousSibling.style.display = '';
+        }
       for (var i = 0; i < posts.length; i++) {
         posts[i].parentNode.parentNode.style.display = '';
         posts[i].style.display = '';
@@ -533,13 +556,17 @@
         }
       }
       if (manual && stubs) {
-        for (var i in replies)
+        for (var i in replies) {
+          //console.log($('.delete', replies[i]) +' - '+ $('.body', replies[i]));
           if (spam(replies[i]))
-            hideReply($('.pointer', replies[i]), $('blockquote', replies[i]));
+            hideReply($('.delete', replies[i]), replies[i]);
+        }
       } else {
         for (var i in replies)
-          if (spam(replies[i]))
+          if (spam(replies[i])) {
             replies[i].style.display = 'none';
+            replies[i].previousSibling.style.display = 'none';
+          }
       }/*
       posts.forEach(function (post) {
         if (spam(post)) {
@@ -581,10 +608,15 @@
           if (specialCom[i].test(temp))
             return true;
         }
-      var n = x(".//span[@class='postername' or @class='commentpostername']", el);
+      var n = x(".//span[@class='name' or @class='name']", el);
+      var t = $('.trip', el);
       for (var i in names)
         if (names[i].test(n.textContent))
           return true;
+      if (t)
+        for (var i in tripcodes)
+          if (tripcodes[i].test(t.textContent))
+            return true;
       if (files) {
         temp = x(filex, el);
         if (temp)
@@ -592,11 +624,11 @@
             if (files[j].test(temp.textContent))
               return true;
       } if (tripcodes) {
-        temp = x(tripx, el);
-        if (temp)
-          for (j in tripcodes)
-            if (tripcodes[j].test(temp.textContent))
-              return true;
+        //temp = x(tripx, el);
+        //if (_t)
+        //  for (var i in tripcodes)
+        //    if (tripcodes[i].test(_t.textContent))
+        //      return true;
       } if (emails) {
         temp = $('a', n);
         if (temp)
@@ -765,7 +797,7 @@
           hideCount++;*/
       if (manual && stubs) {
         for (var i in replies)
-          if ($('blockquote', replies[i]).style.display)
+          if ($('.body', replies[i]).style.display)
             hideCount++;
       } else
         for (var i in replies)
