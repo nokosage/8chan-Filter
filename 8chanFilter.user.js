@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         8chan Filter
-// @version      0.2.0
+// @version      0.2.1
 // @namespace    nokosage
 // @description  Regular expression, point-and-click filtering on 8chan.
 // @author       nokosage
@@ -13,7 +13,7 @@
 // ==/UserScript==
 
 /*
-  8chan Filter v0.2.0
+  8chan Filter v0.2.1
   https://github.com/nokosage/8chan-Filter/
 
   Developers:
