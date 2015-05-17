@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         8chan Filter
-// @version      0.2.1
+// @version      0.2.2
 // @namespace    nokosage
 // @description  Regular expression, point-and-click filtering on 8chan.
 // @author       nokosage
-// @include      *://*8ch*/*/*.html*
+// @include      *8ch.net*
 // @run-at       document-start
 // @grant        none
 // @updateURL    https://raw.githubusercontent.com/nokosage/8chan-Filter/master/8chanFilter.meta.js
@@ -13,7 +13,7 @@
 // ==/UserScript==
 
 /*
-  8chan Filter v0.2.1
+  8chan Filter v0.2.2
   https://github.com/nokosage/8chan-Filter/
 
   Developers:
@@ -159,10 +159,10 @@
      <label>Sticky<input type="checkbox"></label><br>\
     </div>\
     <div>\
-     <a title="The characters .*+?^${}()|[]/\\ are RegEx operators. Prefix them with a backslash to make them behave normally (? -> \\?).">hide</a> \
-     <a title="Show filtered posts">show</a> \
-     <a title="Switch between main/advanced controls">adv</a> \
-     <a title="Auto-hide dialog box">auto</a>\
+     <a class="post_no" title="The characters .*+?^${}()|[]/\\ are RegEx operators. Prefix them with a backslash to make them behave normally (? -> \\?).">hide</a> \
+     <a class="post_no" title="Show filtered posts">show</a> \
+     <a class="post_no" title="Switch between main/advanced controls">adv</a> \
+     <a class="post_no" title="Auto-hide dialog box">auto</a>\
     </div>';
     dialog.id = 'thread_filter';
     dialog.style.position = GM_getValue('Sticky', true) ? 'fixed' : 'absolute';
@@ -178,28 +178,16 @@
     const reply = /res|read|archive\/|thread/.test(window.location.pathname);//imageboard|textboard|suptgarchive|4chanarchive+easymodo
     try{const site = window.location.hostname.match(/\.(\w+)/)[1]} catch(e){};// using try/catch because my saved test pages don't have url formatted filneames
     const server = location.hostname.match(/(\w+)?/)[0];
-    const tripx =
-      site == 'easymodo' ? ".//span[@class='trip']" :
-      server == 'dis' ? './/span[@class="trip"]' :
-      "./span[@class='trip']|./a/span[@class='trip']";
+    const tripx = ".//span[@class='trip']";
     //we can't just use the dis xpath because on the imageboards,
     // replies are children of the OP, and we don't want to filter
     // the entire thread just because of one reply.
-    const filex = site == 'easymodo' ? "./span" : "./div[@class='files']";
-    const imagex = site == 'easymodo' ? ".//img[@class='post-image']" : ".//img[@class='post-image']|//span[@class='tn_reply' or @class='tn_thread']";
-    switch (site) {
-      case 'thisisnotatrueending':
-        var board = '\/tg\/';
-        break;
-      case 'easymodo':
-        board = window.location.pathname.match(/\.pl(\/\w+)/)[1] + '/';
-        break;
-      default:// use .+? for i18n.
-        board = window.location.pathname.match(/(\/read)?(\/.+?\/)/)[2];
-    }
+    const filex = "./div[@class='files']";
+    const imagex = ".//img[@class='post-image']|//span[@class='tn_reply' or @class='tn_thread']";
+    var board = window.location.pathname.match(/(\/read)?(\/.+?\/)/)[2];
     const manual = GM_getValue('Manual Filtering', true);
     const stubs = GM_getValue('Show Stubs');
-    var replies = X('//div[@class="post reply"]');
+    var replies = $$('.reply');//X('//div[@class="post reply"]');
     //console.log(replies);
     var imageCount = X(imagex).length;
     var threads = X("./form/div/div[@id!='footer'][not(contains(@id,'hidden'))]"); //MOD
@@ -263,6 +251,9 @@
         case 'Sticky':
           defaultValue = true;
           break;
+        case 'Show Stubs':
+          defaultValue = true;
+          break;
       }
       boxes[i].checked = GM_getValue(text, defaultValue);
       boxes[i].addEventListener('click', switcher, true);
@@ -322,7 +313,7 @@
           stb = document.createElement("div");
           lbl = $('label', $('.intro', bq));
           no = $('[class="post_no"]', $('.intro', bq));
-          stb.innerHTML = '<a class="filter_stub" style="text-decoration: none; margin-left: 4px; cursor: pointer;">'+
+          stb.innerHTML = '<a class="filter_stub post_no" style="text-decoration: none; margin-left: 4px; cursor: pointer;">'+
                            ' [ - ] - ' + lbl.textContent + ' ' + no.textContent + no.nextSibling.textContent+
                           '</a>';
           $('[class="post_anchor"]').parentNode.insertBefore(stb, bq);
@@ -393,7 +384,7 @@
         hideSpan.textContent = 'Hidden Posts: ' + hideCount;
       } else {
         imageCount = X(imagex).length;
-        replies = X('//div[@class="post reply"]');
+        replies = $$('.reply');
         hideCountF();
       }
       var postCount = reply ? replies.length + 1 : threads.length ? threads.length + replies.length : $$('blockquote').length;
@@ -423,8 +414,8 @@
       }
       if (hideText.checked)
         hideTextF(true);
-      else if (this.nodeName)//Don't call hideCountF() in the middle of applyF()
-        hideCountF();
+      //else if (this.nodeName)//Don't call hideCountF() in the middle of applyF()
+      //  hideCountF();
     }
      
     function switcher() {
@@ -739,14 +730,14 @@
         hideSpan.className = 'autohide';
         adv.textContent == 'adv' ? mainDiv.className = 'autohide' : advDiv.className = 'autohide';
         buttonsDiv.className = 'autohide';
-        dialog.className = skin ? 'autohide' : 'reply autohide';
+        dialog.className = skin ? 'autohide' : 'autohide';
       } else {
         autoHide.innerHTML = 'auto';
         hideSpan.className = '';
         mainDiv.className = '';
         advDiv.className = '';
         buttonsDiv.className = '';
-        dialog.className = skin ? '' : 'reply';
+        dialog.className = skin ? '' : 'asdf';
       }
     }
      
@@ -774,9 +765,9 @@
      
     function skinF(useClear) {
       if (GM_getValue('autohide'))
-        dialog.className = useClear ? 'autohide' : 'reply autohide';
+        dialog.className = useClear ? 'autohide' : 'asdf';
       else
-        dialog.className = useClear ? '' : 'reply';
+        dialog.className = useClear ? '' : 'asdf';
     }
      
     function loadValues() {
@@ -794,12 +785,12 @@
       hideCount = 0;/*
       for (var i = 0; i < threads.length; i++)
         if (threads[i].style.display)
-          hideCount++;*/
+          hideCount++;*//*
       if (manual && stubs) {
         for (var i in replies)
           if ($('.body', replies[i]).style.display)
             hideCount++;
-      } else
+      } else*/
         for (var i in replies)
           if (replies[i].style.display)
             hideCount++;/*
