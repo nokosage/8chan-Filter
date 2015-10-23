@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         8chan Filter
-// @version      0.2.2
+// @version      0.2.3
 // @namespace    nokosage
 // @description  Regular expression, point-and-click filtering on 8chan.
 // @author       nokosage
@@ -13,7 +13,7 @@
 // ==/UserScript==
 
 /*
-  8chan Filter v0.2.2
+  8chan Filter v0.2.3
   https://github.com/nokosage/8chan-Filter/
 
   Developers:
@@ -192,7 +192,7 @@
     var imageCount = X(imagex).length;
     var threads = X("./form/div/div[@id!='footer'][not(contains(@id,'hidden'))]"); //MOD
     var posts = $$('.post');//Text Boards
-    var disSubjects = $$('span.replies + a');
+    var disSubjects = $$('span.subject');
     var hideCount = 0;
     var listBoard = board;
     var replyHidden = JSON.parse(GM_getValue(board + 'manual', '[]'));
@@ -566,14 +566,15 @@
           else
             post.style.display = 'none';
         }
-      });*/
+      });*//*
       if (subjects) {//this is kind of ugly
         disSubjects.forEach(function (sub) {
           for (j in subjects)
             if (subjects[j].test(sub.textContent))
-              sub.parentNode.parentNode.parentNode.parentNode.style.display = 'none';
+              sub.parentNode.parentNode.parentNode.style.display = 'none';
+              //sub.parentNode.parentNode.parentNode.previousSibling.style.display = 'none';
         });
-      }
+      }*/
      
       hideCountF();
     }
@@ -621,13 +622,13 @@
         //    if (tripcodes[i].test(_t.textContent))
         //      return true;
       } if (emails) {
-        temp = $('a', n);
+        temp = $('a.email', el);
         if (temp)
           for (j in emails)
             if (emails[j].test(decodeURIComponent(temp.href.slice(7))))//slice off mailto:
               return true;
       } if (subjects) {
-        temp = el.nodeName == "DIV" ? $('.filetitle', el) : $('.replytitle', el);
+        temp = $('span.subject', el);
         if (temp)
           for (j in subjects)
             if (subjects[j].test(temp.textContent))

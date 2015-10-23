@@ -1,3 +1,7 @@
+0.2.3
+- 8chan HTML changes
+  - Fixed subject and email filters
+
 0.2.2
 - Domain change again
 - Corrected code to work with new HTML
